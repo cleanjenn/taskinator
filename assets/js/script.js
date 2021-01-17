@@ -35,7 +35,6 @@ var taskFormHandler = function(event) {
       type: taskTypeInput,
       status: "to do"
     };
-
     createTaskEl(taskDataObj);
   }
 };
@@ -54,6 +53,24 @@ var createTaskEl = function(taskDataObj) {
   // create task actions (buttons and select) for task
   var taskActionsEl = createTaskActions(taskIdCounter);
   listItemEl.appendChild(taskActionsEl);
+
+  switch (taskDataObj.status) {
+    case "to do":
+      taskActionsEl.querySelector("select[name='status-change']").selectedIndex = 0;
+      tasksToDoEl.append(listItemEl);
+      break;
+    case "in progress":
+      taskActionsEl.querySelector("select[name='status-change']").selectedIndex = 1;
+      tasksInProgressEl.append(listItemEl);
+      break;
+    case "completed":
+      taskActionsEl.querySelector("select[name='status-change']").selectedIndex = 2;
+      tasksCompletedEl.append(listItemEl);
+      break;
+    default:
+      console.log("Something went wrong!");
+  }
+
   tasksToDoEl.appendChild(listItemEl);
 
   taskDataObj.id = taskIdCounter;
@@ -118,7 +135,7 @@ var completeEditTask = function(taskName, taskType, taskId) {
       tasks[i].name = taskName;
       tasks[i].type = taskType;
     }
-  };
+  } 
   saveTasks();
   alert("Task Updated!");
 
@@ -210,6 +227,7 @@ var deleteTask = function(taskId) {
   // reassign tasks array to be the same as updatedTaskArr
   tasks = updatedTaskArr;
   saveTasks();
+  alert("Task deleted!");
 };
 
 var dropTaskHandler = function(event) {
@@ -237,8 +255,6 @@ var dropTaskHandler = function(event) {
       console.log("Something went wrong!");
   }
 
-  dropZone.appendChild(draggableElement);
-
   // loop through tasks array to find and update the updated task's status
   for (var i = 0; i < tasks.length; i++) {
     if (tasks[i].id === parseInt(id)) {
@@ -246,7 +262,9 @@ var dropTaskHandler = function(event) {
     }
   }
   saveTasks();
-  console.log(tasks);
+
+  dropZone.removeAttribute("style");
+  dropZone.appendChild(draggableElement);
 };
 
 // defines the drop zone area
@@ -276,6 +294,20 @@ var dragLeaveHandler = function(event) {
 var saveTasks = function() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
 }
+
+var loadTasks = function() {
+  var savedTasks = localStorage.getItem("tasks");
+  // if there are no tasks, set tasks to an empty array and return out of the function
+  if (!savedTasks) {
+    return false;
+  }
+  savedTasks = JSON.parse(savedTasks);
+  // loop through savedTasks array
+  for (var i = 0; i < savedTasks.length; i++) {
+    // pass each task object into the `createTaskEl()` function
+    createTaskEl(savedTasks[i]);
+  }
+};
 // Create event listeners 
 formEl.addEventListener("submit", taskFormHandler);
 
@@ -290,3 +322,5 @@ pageContentEl.addEventListener("dragstart", dragTaskHandler);
 pageContentEl.addEventListener("dragover", dropZoneDragHandler);
 pageContentEl.addEventListener("dragleave", dragLeaveHandler);
 pageContentEl.addEventListener("drop", dropTaskHandler);
+
+loadTasks();
